@@ -217,6 +217,16 @@ export function SignupForm(): React.JSX.Element {
       >
         {isSubmitting ? 'Creating account…' : 'Create account'}
       </button>
+
+      {/*
+        Says what you are signing up as. The API assigns USER and rejects a
+        request that carries a `role` at all, so there is no chooser here —
+        without this line the absence of one just looks like an omission.
+      */}
+      <p className="text-center text-xs text-content-faint">
+        Accounts are created with the <span className="font-medium text-content-muted">User</span>{' '}
+        role. An administrator grants anything beyond that.
+      </p>
     </form>
   );
 }
