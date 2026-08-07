@@ -1,0 +1,192 @@
+@import 'tailwindcss';
+
+/**
+ * Netflix-style dark theme.
+ *
+ * This app is **dark only**, deliberately: a cinema UI wants a near-black
+ * canvas so artwork carries the colour, and supporting a light mode would mean
+ * every poster overlay, gradient and scrim needing a second set of values.
+ * `color-scheme: dark` tells the browser to match form controls and
+ * scrollbars, so we do not fight native widgets.
+ */
+@theme {
+  /*
+   * NOTE: a `--color-<name>` token also defines `text-<name>`, which will
+   * SHADOW a built-in utility of the same name. `--color-base` used to live
+   * here and silently turned `text-base` from a font-size into
+   * `color: #141414` — black text, on a dark UI. Never name a colour token
+   * after Tailwind's font-size scale (xs, sm, base, lg, xl, 2xl…).
+   * A regression test guards this: see globals.theme.test.ts.
+   */
+
+  /* Surfaces, darkest to lightest. */
+  --color-canvas: #141414;
+  --color-surface: #181818;
+  --color-surface-2: #232323;
+  --color-surface-3: #2f2f2f;
+
+  /* Netflix red. `brand` is the action colour; nothing else should be red. */
+  --color-brand: #e50914;
+  --color-brand-hover: #f6121d;
+  --color-brand-dim: #b20710;
+
+  --color-content: #ffffff;
+  --color-content-muted: #b3b3b3;
+  --color-content-faint: #808080;
+
+  --color-line: rgba(255, 255, 255, 0.12);
+  --color-line-strong: rgba(255, 255, 255, 0.28);
+
+  /*
+   * Secondary-action grey, used solid (not translucent) on the hero.
+   * Translucent greys composite down against the near-black scrim and vanish;
+   * #6d6d6e sits at 3.6:1 against the backdrop while still leaving 5.2:1 for
+   * white label text. Going lighter for hover would drop the label below AA,
+   * so hover is expressed with a ring instead of a brighter fill.
+   */
+  --color-overlay: #6d6d6e;
+  --color-overlay-hover: #767677;
+
+  --color-success: #46d369;
+  --color-danger: #e87c03;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-card: 0.25rem;
+
+  /* Netflix's signature card lift. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-content);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible for keyboard users, invisible for mouse clicks. */
+  :focus-visible {
+    outline: 2px solid var(--color-content);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Respect the OS setting — the hover-scale rows are a lot of motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Carousels scroll by button and by trackpad; the bar itself is noise. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * Keeps text legible over arbitrary artwork.
+   *
+   * A tight, near-opaque shadow plus a wider soft one: the tight layer gives
+   * the crisp edge that reads as *white*, the wide layer lifts it off busy
+   * artwork. A single wide blur alone bleeds grey into the glyphs and makes
+   * white text look muted.
+   */
+  .text-shadow-hero {
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.9),
+      0 4px 16px rgba(0, 0, 0, 0.7);
+  }
+
+  .row-fade-left {
+    background: linear-gradient(to right, var(--color-canvas), transparent);
+  }
+  .row-fade-right {
+    background: linear-gradient(to left, var(--color-canvas), transparent);
+  }
+}
+
+/* The native <dialog> backdrop — used by the movie detail modal. */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+dialog {
+  /* Reset the UA centring so the modal can position itself. */
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+/*
+ * Confirmation modals fade and lift in. `@starting-style` is what lets a
+ * top-layer element animate *on open* — without it the browser has no "before"
+ * to interpolate from and the dialog simply appears. `allow-discrete` keeps
+ * `display` and `overlay` animatable so the exit is not cut off mid-transition.
+ *
+ * The reduced-motion rule in @layer base collapses these durations, so there is
+ * nothing extra to opt out of here.
+ */
+dialog[data-confirm] {
+  margin: auto;
+  opacity: 0;
+  translate: 0 8px;
+  scale: 0.97;
+  transition:
+    opacity 160ms ease-out,
+    translate 160ms ease-out,
+    scale 160ms ease-out,
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+}
+
+dialog[data-confirm][open] {
+  opacity: 1;
+  translate: 0;
+  scale: 1;
+}
+
+@starting-style {
+  dialog[data-confirm][open] {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.97;
+  }
+}
+
+dialog[data-confirm]::backdrop {
+  opacity: 0;
+  transition:
+    opacity 160ms ease-out,
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+}
+
+dialog[data-confirm][open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog[data-confirm][open]::backdrop {
+    opacity: 0;
+  }
+}
