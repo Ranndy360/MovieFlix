@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "plugins": [{ "name": "next" }],
+
+    /* ---- strict mode: every flag on ---- */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "useUnknownInCatchVariables": true,
+
+    /* ---- extra safety beyond `strict` ---- */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    /**
+     * Intentionally off: React props spread through `Partial<T>` constantly and
+     * `exactOptionalPropertyTypes` turns that into noise, not safety.
+     */
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "out", "coverage"]
+}
