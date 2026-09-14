@@ -24,6 +24,67 @@ npm run start:dev              # http://localhost:3001
 Without it the movies page renders its error state — that is the intended
 behavior, not a crash.
 
+## Running in Docker
+
+**The whole stack** — database, API and this client — lives in the repository
+root:
+
+```bash
+cd ..                 # the directory holding MovieFlix and MovieFlix-api
+docker compose up -d --build
+```
+
+The client is then on <http://localhost:3000> and the API on
+<http://localhost:3001/api/v1>, with the database migrated and seeded.
+
+```bash
+docker compose logs -f web
+docker compose down
+```
+
+**This app alone:**
+
+```bash
+docker build -t movieflix-web \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1 .
+
+docker run --rm -p 3000:3000 \
+  -e API_BASE_URL=http://host.docker.internal:3001/api/v1 \
+  movieflix-web
+```
+
+### The one thing to get right: build-time vs run-time
+
+`NEXT_PUBLIC_*` is **compiled into the browser bundle**, so it has to be passed
+as a `--build-arg`. Setting it at `docker run` is too late — the value baked in
+at build time is what the browser will use. An image is therefore specific to
+the API URL it was built against: a new backend URL needs a rebuild, not a
+restart.
+
+`API_BASE_URL` is the opposite. Server Components fetch from *inside* the
+network, so it is an ordinary runtime variable and it usually holds a different
+address than the public one:
+
+| Variable | When | Value in the compose stack | Why |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | build | `http://localhost:3001/api/v1` | The **browser** resolves it, from outside Docker |
+| `API_BASE_URL` | run | `http://api:3001/api/v1` | The **container** resolves it, on the Compose network |
+
+Same API, two vantage points. Giving either one the other's value produces a
+page that renders on the server and then fails in the browser, or the reverse.
+
+### Notes on the image
+
+- **Built on `output: 'standalone'`** (set in `next.config.ts`). Next traces the
+  modules the server actually imports and emits a self-contained bundle, so the
+  runtime layer ships **no `node_modules` at all** — ~450MB instead of ~1GB.
+- **`HOSTNAME=0.0.0.0` is required.** The standalone server binds to localhost
+  otherwise, which inside a container means nothing can ever reach it.
+- **`.next/static` and `public/` are copied separately**: they sit outside the
+  traced bundle, and without them the page loads with no CSS or JS.
+- **Runs as the unprivileged `node` user**, and `.dockerignore` keeps every
+  `.env` out of the build context.
+
 ## Scripts
 
 ```bash
