@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  /**
+   * Emits `.next/standalone`: a self-contained server plus only the modules it
+   * actually imports. It is what lets the Docker image ship without
+   * `node_modules`, taking the runtime image from ~1GB to ~200MB.
+   *
+   * Harmless outside Docker — `next dev` and `next start` ignore it.
+   */
+  output: 'standalone',
+
   // Fail the production build on a type or lint error rather than shipping it.
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: false },
